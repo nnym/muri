@@ -1,5 +1,6 @@
 package muri;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Path {
@@ -13,10 +14,6 @@ public class Path {
 		this.segments = segments;
 	}
 
-	Path() {
-		this(false, List.of());
-	}
-
 	public boolean isEmpty() {
 		return !this.absolute && this.segments.isEmpty();
 	}
@@ -27,5 +24,23 @@ public class Path {
 		if (this.absolute) builder.append('/');
 
 		return builder.append(String.join("/", this.segments)).toString();
+	}
+
+	Path removeDotSegments() {
+		var segments = new ArrayList<String>();
+
+		for (var segment : this.segments) {
+			if (!segment.equals(".")) {
+				if (segment.equals("..")) {
+					if (!segments.isEmpty()) {
+						segments.remove(segments.size() - 1);
+					}
+				} else {
+					segments.add(segment);
+				}
+			}
+		}
+
+		return new Path(this.absolute, List.copyOf(segments));
 	}
 }

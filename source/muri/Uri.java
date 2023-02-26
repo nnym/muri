@@ -1,5 +1,8 @@
 package muri;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Uri {
 	public final String scheme;
 	public final Authority authority;
@@ -17,6 +20,18 @@ public class Uri {
 
 	public static Uri uri(String uri) {
 		return new Parser(uri).parse();
+	}
+
+	public Uri resolve(Uri reference) {
+		if (reference.scheme != null) return new Uri(reference.scheme, reference.authority, reference.path.removeDotSegments(), reference.query, reference.fragment);
+		if (reference.authority != null) return new Uri(this.scheme, reference.authority, reference.path.removeDotSegments(), reference.query, reference.fragment);
+		if (reference.path.isEmpty()) return new Uri(this.scheme, this.authority, this.path, reference.query == null ? this.query : reference.query, reference.fragment);
+
+		return new Uri(this.scheme, this.authority, (reference.path.absolute ? reference.path : this.mergePath(reference.path)).removeDotSegments(), this.query, reference.fragment);
+	}
+
+	public Uri resolve(String reference) {
+		return this.resolve(uri(reference));
 	}
 
 	public Uri absolute() {
@@ -40,5 +55,14 @@ public class Uri {
 		if (this.fragment != null) builder.append('#').append(this.fragment);
 
 		return builder.toString();
+	}
+
+	private Path mergePath(Path path) {
+		if (this.authority != null && this.path.isEmpty()) return new Path(true, path.segments);
+
+		var segments = new ArrayList<>(this.path.segments.subList(0, Math.max(0, this.path.segments.size() - 1)));
+		segments.addAll(path.segments);
+
+		return new Path(this.path.absolute, List.copyOf(segments));
 	}
 }

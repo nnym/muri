@@ -8,7 +8,90 @@ import static muri.Uri.*;
 
 @Testable
 public class Tests {
-	@Test void test() {
+	static void assertStringEquals(Object expected, Object actual) {
+		assertNotNull(actual);
+		assertEquals(expected, actual.toString());
+	}
+
+	@Test void resolve() {
+		var base = uri("https://example.net/a/b/c/?a=1#frag");
+		var uri = base.resolve("/test/./te/..#garf");
+		assertSame(base.scheme, uri.scheme);
+		assertSame(base.authority, uri.authority);
+		assertStringEquals("/test", uri.path);
+		assertSame(base.query, uri.query);
+		assertStringEquals("garf", uri.fragment);
+		assertStringEquals("https://example.net/test?a=1#garf", uri);
+
+		base = uri("https://example.net/a/b/c?a=1#frag");
+		uri = base.resolve("/test/./te/..#garf");
+		assertSame(base.scheme, uri.scheme);
+		assertSame(base.authority, uri.authority);
+		assertStringEquals("/test", uri.path);
+		assertSame(base.query, uri.query);
+		assertStringEquals("garf", uri.fragment);
+		assertStringEquals("https://example.net/test?a=1#garf", uri);
+
+		base = uri("https://example.net/a/b/c/?a=1#frag");
+		uri = base.resolve("test/./te/..#garf");
+		assertSame(base.scheme, uri.scheme);
+		assertSame(base.authority, uri.authority);
+		assertStringEquals("/a/b/c/test", uri.path);
+		assertSame(base.query, uri.query);
+		assertStringEquals("garf", uri.fragment);
+		assertStringEquals("https://example.net/a/b/c/test?a=1#garf", uri);
+
+		base = uri("https://example.net/a/b/c?a=1#frag");
+		uri = base.resolve("test/./te/..#garf");
+		assertSame(base.scheme, uri.scheme);
+		assertSame(base.authority, uri.authority);
+		assertStringEquals("/a/b/test", uri.path);
+		assertSame(base.query, uri.query);
+		assertStringEquals("garf", uri.fragment);
+		assertStringEquals("https://example.net/a/b/test?a=1#garf", uri);
+
+		base = uri("https://example.net/a/b/c?a=1#frag");
+		uri = base.resolve("#garf");
+		assertSame(base.scheme, uri.scheme);
+		assertSame(base.authority, uri.authority);
+		assertStringEquals("/a/b/c", uri.path);
+		assertSame(base.query, uri.query);
+		assertStringEquals("garf", uri.fragment);
+		assertStringEquals("https://example.net/a/b/c?a=1#garf", uri);
+
+		base = uri("https://example.net/a/b/c?a=1#frag");
+		uri = base.resolve("?b=2");
+		assertSame(base.scheme, uri.scheme);
+		assertSame(base.authority, uri.authority);
+		assertStringEquals("/a/b/c", uri.path);
+		assertStringEquals("b=2", uri.query);
+		assertNull(uri.fragment);
+		assertStringEquals("https://example.net/a/b/c?b=2", uri);
+
+		base = uri("https://example.net/a/b/c?a=1#frag");
+		var reference = Uri.uri("//a:b@example.com");
+		uri = base.resolve(reference);
+		assertSame(base.scheme, uri.scheme);
+		assertSame(reference.authority, uri.authority);
+		assertStringEquals("", uri.path);
+		assertNull(uri.query);
+		assertNull(uri.fragment);
+		assertStringEquals("https://a:b@example.com", uri);
+
+		base = uri("https://example.net/a/b/c?a=1#frag");
+		reference = Uri.uri("test://googol");
+		uri = base.resolve(reference);
+		assertSame(reference.scheme, uri.scheme);
+		assertSame(reference.authority, uri.authority);
+		assertStringEquals("", uri.path);
+		assertNull(uri.query);
+		assertNull(uri.fragment);
+		assertStringEquals("test://googol", uri);
+
+		var bp = true;
+	}
+
+	@Test void parse() {
 		assertThrows(IllegalArgumentException.class, () -> uri(":"));
 		assertThrows(IllegalArgumentException.class, () -> uri("1:"));
 		assertThrows(IllegalArgumentException.class, () -> uri("+:"));
