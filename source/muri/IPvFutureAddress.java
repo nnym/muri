@@ -1,6 +1,6 @@
 package muri;
 
-public class IPvFutureAddress implements IPAddress {
+public final class IPvFutureAddress implements IPAddress {
 	public final long version;
 	public final String address;
 

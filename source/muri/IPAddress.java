@@ -1,5 +1,5 @@
 package muri;
 
-public interface IPAddress extends Host {
+public sealed interface IPAddress extends Host permits IPv4Address, IPv6Address, IPvFutureAddress {
 	@Override String toString();
 }

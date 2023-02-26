@@ -1,6 +1,6 @@
 package muri;
 
-public class IPv4Address implements IPAddress {
+public final class IPv4Address implements IPAddress {
 	public final int address;
 
 	IPv4Address(int address) {

@@ -1,6 +1,6 @@
 package muri;
 
-public class IPv6Address implements IPAddress {
+public final class IPv6Address implements IPAddress {
 	public final short[] address;
 
 	IPv6Address(short[] address) {

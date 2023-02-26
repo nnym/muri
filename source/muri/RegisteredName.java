@@ -1,6 +1,6 @@
 package muri;
 
-public class RegisteredName implements Host {
+public final class RegisteredName implements Host {
 	public final String name;
 
 	RegisteredName(String name) {
