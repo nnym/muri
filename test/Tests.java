@@ -132,15 +132,39 @@ public class Tests {
 		assertEquals("1", query.value("a"));
 
 		uri = uri("test:1998/12/?a=1");
-		query = uri.query;
 		assertEquals("test", uri.scheme);
 		assertEquals("1998/12/", uri.path.toString());
-		assertEquals("1", query.value("a"));
+		assertEquals("1", uri.query.value("a"));
 
 		uri = uri("test:1998/12/12.md?a=1");
-		query = uri.query;
 		assertEquals("1998/12/12.md", uri.path.toString());
-		assertEquals("1", query.value("a"));
+		assertEquals("1", uri.query.value("a"));
+
+		uri = uri("test:#frag");
+		assertEquals("", uri.path.toString());
+		assertEquals("frag", uri.fragment);
+
+		uri = uri("test://#frag");
+		assertEquals("", uri.path.toString());
+		assertEquals("", uri.authority.toString());
+		assertEquals("frag", uri.fragment);
+
+		uri = uri("test://a:b@example.net?a=1#frag");
+		assertEquals("a:b@example.net", uri.authority.toString());
+		assertEquals("", uri.path.toString());
+		assertEquals("a=1", uri.query.toString());
+		assertEquals("frag", uri.fragment);
+
+		uri = uri("test://a:b@example.net/path?a=1#frag");
+		assertEquals("a:b@example.net", uri.authority.toString());
+		assertEquals("/path", uri.path.toString());
+		assertEquals("a=1", uri.query.toString());
+		assertEquals("frag", uri.fragment);
+
+		uri = uri("test:1998/12/12.md?a=1#:@frag?/!$&'()*+,;=_~-.123");
+		assertEquals("1998/12/12.md", uri.path.toString());
+		assertEquals("1", uri.query.value("a"));
+		assertEquals(":@frag?/!$&'()*+,;=_~-.123", uri.fragment);
 
 		var bp = true;
 	}

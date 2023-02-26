@@ -31,10 +31,12 @@ class Parser {
 		Authority authority = null;
 		var path = Path.empty;
 		Query query = null;
+		String fragment = null;
 
 		if (this.hasNext()) A: {
 			if (this.advance('/')) B: {
 				if (!this.hasNext() || this.peek("#?")) {
+					this.advance();
 					path = new Path(true, List.of());
 					break B;
 				}
@@ -61,9 +63,14 @@ class Parser {
 			if (this.character == '?') {
 				query = this.query();
 			}
+
+			if (this.finished()) break A;
+			if (this.character != '#') throw this.illegalCharacter();
+
+			fragment = this.fragment();
 		}
 
-		return new Uri(scheme, authority, path, query);
+		return new Uri(scheme, authority, path, query, fragment);
 	}
 
 	private boolean pchar() {
@@ -125,6 +132,20 @@ class Parser {
 
 	private static boolean us(int character) {
 		return unreserved(character) || subDelim(character);
+	}
+
+	private IllegalArgumentException illegalCharacter() {
+		return new IllegalArgumentException("illegal character '%c' at index %s".formatted(this.character, this.index));
+	}
+
+	private String fragment() {
+		var index = this.index + 1;
+
+		while (this.advance()) {
+			if (!this.qfchar()) throw this.illegalCharacter();
+		}
+
+		return this.index == index ? "" : this.uri.substring(index, this.index);
 	}
 
 	private Query query() {
@@ -335,7 +356,7 @@ class Parser {
 						colon = this.index;
 					}
 				} else if (!this.ups()) {
-					if (!this.in("/#?")) throw new IllegalArgumentException("illegal character '%c' at index %s".formatted(this.character, this.index));
+					if (!this.in("/#?")) throw this.illegalCharacter();
 
 					break;
 				}

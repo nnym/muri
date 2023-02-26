@@ -5,16 +5,22 @@ public class Uri {
 	public final Authority authority;
 	public final Path path;
 	public final Query query;
+	public final String fragment;
 
-	Uri(String scheme, Authority authority, Path path, Query query) {
+	Uri(String scheme, Authority authority, Path path, Query query, String fragment) {
 		this.scheme = scheme;
 		this.authority = authority;
 		this.path = path;
 		this.query = query;
+		this.fragment = fragment;
 	}
 
 	public static Uri uri(String uri) {
 		return new Parser(uri).parse();
+	}
+
+	public boolean isAbsolute() {
+		return this.scheme != null && this.fragment == null;
 	}
 
 	@Override public String toString() {
@@ -26,6 +32,7 @@ public class Uri {
 		builder.append(this.path);
 
 		if (this.query != null) builder.append('?').append(this.query);
+		if (this.fragment != null) builder.append('#').append(this.fragment);
 
 		return builder.toString();
 	}
