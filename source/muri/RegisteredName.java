@@ -3,7 +3,7 @@ package muri;
 public class RegisteredName implements Host {
 	public final String name;
 
-	public RegisteredName(String name) {
+	RegisteredName(String name) {
 		this.name = name;
 	}
 

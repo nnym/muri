@@ -4,7 +4,7 @@ public class IPvFutureAddress implements IPAddress {
 	public final long version;
 	public final String address;
 
-	public IPvFutureAddress(long version, String address) {
+	IPvFutureAddress(long version, String address) {
 		this.version = version;
 		this.address = address;
 	}
