@@ -40,8 +40,8 @@ class Parser {
 			for (;;) {
 				if (this.character == ':') throw new IllegalArgumentException("non-scheme ([A-Za-z\\d+-.]) character ('%c')".formatted(this.character));
 
-				if (!this.pcharNc()) {
-					if (!this.in("/?#")) throw this.illegalCharacter();
+				if (!this.pcharNc() || !this.advance()) {
+					if (!this.in("/?#") && !this.finished()) throw this.illegalCharacter();
 
 					var segments = new ArrayList<String>();
 					segments.add(this.uri.substring(0, this.index));
@@ -468,6 +468,7 @@ class Parser {
 
 	private boolean advance() {
 		if (++this.index >= this.uri.length()) {
+			this.index = this.uri.length();
 			return false;
 		}
 
