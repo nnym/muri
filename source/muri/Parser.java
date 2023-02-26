@@ -20,9 +20,9 @@ class Parser {
 		String scheme = null;
 		var path = Path.empty;
 
-		if (this.in("/?#")) {
+		if (this.character == '/') {
 			this.index = -1;
-		} else A: {
+		} else if (!this.in("?#")) A: {
 			var character = this.character;
 			var alpha = alpha(character);
 
@@ -78,7 +78,7 @@ class Parser {
 					}
 
 					path = this.path(true);
-				} else {
+				} else if (!this.in("?#")) {
 					path = this.path(false);
 				}
 			}
