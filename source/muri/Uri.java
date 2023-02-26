@@ -1,5 +1,8 @@
 package muri;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +25,14 @@ public class Uri {
 		return new Parser(uri).parse();
 	}
 
+	public static Uri uri(URI uri) {
+		return uri(uri.toString());
+	}
+
+	public static Uri uri(URL url) {
+		return uri(url.toString());
+	}
+
 	public Uri resolve(Uri reference) {
 		if (reference.scheme != null) return new Uri(reference.scheme, reference.authority, reference.path.removeDotSegments(), reference.query, reference.fragment);
 		if (reference.authority != null) return new Uri(this.scheme, reference.authority, reference.path.removeDotSegments(), reference.query, reference.fragment);
@@ -41,6 +52,18 @@ public class Uri {
 
 	public boolean isAbsolute() {
 		return this.scheme != null && this.fragment == null;
+	}
+
+	public URI toURI() {
+		return URI.create(this.toString());
+	}
+
+	public URL toURL() {
+		try {
+			return new URL(this.toString());
+		} catch (MalformedURLException exception) {
+			throw new IllegalArgumentException(exception.getMessage(), exception);
+		}
 	}
 
 	@Override public String toString() {
