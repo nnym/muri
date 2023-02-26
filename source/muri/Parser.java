@@ -23,11 +23,12 @@ class Parser {
 		if (this.in("/?#")) {
 			this.index = -1;
 		} else A: {
-			var alpha = alpha(this.character);
+			var character = this.character;
+			var alpha = alpha(character);
 
 			while (this.advance()) {
 				if (this.character == ':') {
-					if (!alpha) throw new IllegalArgumentException("0th character ('%c') is not A-z".formatted(this.character));
+					if (!alpha) throw new IllegalArgumentException("0th character ('%c') is not A-z".formatted(character));
 
 					scheme = this.uri.substring(0, this.index);
 					break A;
@@ -37,7 +38,7 @@ class Parser {
 			}
 
 			for (;;) {
-				if (this.character == ':') throw new IllegalArgumentException("non-scheme ([A-Za-z\\d+-.]) character ('%c') at index %s".formatted(this.character, this.index));
+				if (this.character == ':') throw new IllegalArgumentException("non-scheme ([A-Za-z\\d+-.]) character ('%c')".formatted(this.character));
 
 				if (!this.pcharNc()) {
 					if (!this.in("/?#")) throw this.illegalCharacter();
