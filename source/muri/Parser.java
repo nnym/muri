@@ -30,6 +30,7 @@ class Parser {
 		var scheme = this.uri.substring(0, this.index);
 		Authority authority = null;
 		var path = Path.empty;
+		Query query = null;
 
 		if (this.hasNext()) A: {
 			if (this.advance('/')) B: {
@@ -54,13 +55,23 @@ class Parser {
 			} else {
 				path = this.path(false);
 			}
+
+			if (this.finished()) break A;
+
+			if (this.character == '?') {
+				query = this.query();
+			}
 		}
 
-		return new Uri(scheme, authority, path);
+		return new Uri(scheme, authority, path, query);
 	}
 
 	private boolean pchar() {
 		return this.ups() || this.character == ':' || this.character == '@';
+	}
+
+	private boolean qfchar() {
+		return this.pchar() || this.character == '/' || this.character == '?';
 	}
 
 	private static boolean schemePart(int character) {
@@ -114,6 +125,33 @@ class Parser {
 
 	private static boolean us(int character) {
 		return unreserved(character) || subDelim(character);
+	}
+
+	private Query query() {
+		var parameters = new ArrayList<Parameter>();
+		var index = this.index + 1;
+		var finished = false;
+		String name = null, value;
+
+		while (!finished) {
+			if ((finished = !this.advance() || !this.qfchar()) || this.character == '&') {
+				value = this.uri.substring(index, this.index);
+
+				if (name == null) {
+					name = value;
+					value = null;
+				}
+
+				parameters.add(new Parameter(name, value));
+				name = null;
+				index = this.index + 1;
+			} else if (this.character == '=' && name == null) {
+				name = this.uri.substring(index, this.index);
+				index = this.index + 1;
+			}
+		}
+
+		return new Query(List.copyOf(parameters));
 	}
 
 	private Path path(boolean absolute) {

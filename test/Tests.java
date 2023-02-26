@@ -1,5 +1,4 @@
 import muri.IPvFutureAddress;
-import muri.Uri;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.annotation.Testable;
 
@@ -101,6 +100,47 @@ public class Tests {
 		assertEquals("gradle/wrapper/gradle-wrapper.properties", uri.path.toString());
 		assertEquals(3, uri.path.segments.size());
 		assertFalse(uri.path.absolute);
+
+		uri = uri("test:?flag&123field=!$'()*+,;&b=true&c==false");
+		var query = uri.query;
+		assertEquals("test", uri.scheme);
+		assertEquals("", uri.path.toString());
+		assertNull(uri.authority);
+		assertEquals("flag&123field=!$'()*+,;&b=true&c==false", query.toString());
+		assertFalse(query.has("f"));
+		assertTrue(query.has("flag") && query.has("123field") && query.has("b") && query.has("c"));
+		assertNull(query.value("flag"));
+		assertEquals("!$'()*+,;", query.value("123field"));
+		assertEquals("true", query.value("b"));
+		assertEquals("=false", query.value("c"));
+
+		uri = uri("test:/1998/12/?a=1&b=2");
+		query = uri.query;
+		assertEquals("test", uri.scheme);
+		assertEquals("/1998/12/", uri.path.toString());
+		assertEquals("a=1&b=2", query.toString());
+		assertEquals("1", query.value("a"));
+		assertEquals("2", query.value("b"));
+
+		uri = uri("test://user:pass@/1998/12/?a=1");
+		query = uri.query;
+		assertEquals("test", uri.scheme);
+		assertEquals("user:pass", uri.authority.userinfo.toString());
+		assertEquals("", uri.authority.host.toString());
+		assertEquals("/1998/12/", uri.path.toString());
+		assertEquals("a=1", query.toString());
+		assertEquals("1", query.value("a"));
+
+		uri = uri("test:1998/12/?a=1");
+		query = uri.query;
+		assertEquals("test", uri.scheme);
+		assertEquals("1998/12/", uri.path.toString());
+		assertEquals("1", query.value("a"));
+
+		uri = uri("test:1998/12/12.md?a=1");
+		query = uri.query;
+		assertEquals("1998/12/12.md", uri.path.toString());
+		assertEquals("1", query.value("a"));
 
 		var bp = true;
 	}
