@@ -14,48 +14,72 @@ class Parser {
 	}
 
 	Uri parse() {
-		if (this.advance()) {
-			if (this.character == ':') throw new IllegalArgumentException("empty scheme");
-			if (!alpha(this.character)) throw new IllegalArgumentException("0th character ('%c') is not A-z".formatted(this.character));
-		} else {
-			throw new IllegalArgumentException("empty URI");
-		}
+		if (!this.advance()) return new Uri(null, null, Path.empty, null, null);
+		if (this.character == ':') throw new IllegalArgumentException("empty scheme");
 
-		while (true) {
-			if (!this.advance()) throw new IllegalArgumentException("':' missing");
-			if (this.character == ':') break;
-			if (!schemePart(this.character)) throw new IllegalArgumentException("non-scheme ([A-Za-z\\d+-.]) character ('%c') at index %s".formatted(this.character, this.index));
-		}
-
-		var scheme = this.uri.substring(0, this.index);
-		Authority authority = null;
+		String scheme = null;
 		var path = Path.empty;
+
+		if (this.in("/?#")) {
+			this.index = -1;
+		} else A: {
+			var alpha = alpha(this.character);
+
+			while (this.advance()) {
+				if (this.character == ':') {
+					if (!alpha) throw new IllegalArgumentException("0th character ('%c') is not A-z".formatted(this.character));
+
+					scheme = this.uri.substring(0, this.index);
+					break A;
+				};
+
+				if (!schemePart(this.character)) break;
+			}
+
+			for (;;) {
+				if (this.character == ':') throw new IllegalArgumentException("non-scheme ([A-Za-z\\d+-.]) character ('%c') at index %s".formatted(this.character, this.index));
+
+				if (!this.pcharNc()) {
+					if (!this.in("/?#")) throw this.illegalCharacter();
+
+					var segments = new ArrayList<String>();
+					segments.add(this.uri.substring(0, this.index));
+					path = this.character == '/' ? this.path(false, segments) : new Path(false, segments);
+
+					break;
+				}
+			}
+		}
+
+		Authority authority = null;
 		Query query = null;
 		String fragment = null;
 
 		if (this.hasNext()) A: {
-			if (this.advance('/')) B: {
-				if (!this.hasNext() || this.peek("#?")) {
-					this.advance();
-					path = new Path(true, List.of());
-					break B;
-				}
-
-				if (this.advance('/')) {
-					if (this.advance()) {
-						authority = this.authority();
-
-						if (this.finished() || this.character != '/') {
-							break B;
-						}
-					} else {
+			if (path == Path.empty) {
+				if (this.advance('/')) B: {
+					if (!this.hasNext() || this.peek("?#")) {
+						this.advance();
+						path = new Path(true, List.of());
 						break B;
 					}
-				}
 
-				path = this.path(true);
-			} else {
-				path = this.path(false);
+					if (this.advance('/')) {
+						if (this.advance()) {
+							authority = this.authority();
+
+							if (this.finished() || this.character != '/') {
+								break B;
+							}
+						} else {
+							break B;
+						}
+					}
+
+					path = this.path(true);
+				} else {
+					path = this.path(false);
+				}
 			}
 
 			if (this.finished()) break A;
@@ -77,16 +101,16 @@ class Parser {
 		return this.ups() || this.character == ':' || this.character == '@';
 	}
 
+	private boolean pcharNc() {
+		return this.ups() || this.character == '@';
+	}
+
 	private boolean qfchar() {
 		return this.pchar() || this.character == '/' || this.character == '?';
 	}
 
 	private static boolean schemePart(int character) {
 		return part(character) || character == '+';
-	}
-
-	private static boolean unreserved(int character) {
-		return part(character) || character == '_' || character == '~';
 	}
 
 	private static boolean part(int character) {
@@ -112,10 +136,6 @@ class Parser {
 			|| character >= 'A' && character <= 'F';
 	}
 
-	private static boolean reserved(int character) {
-		return genDelim(character) || subDelim(character);
-	}
-
 	private static boolean subDelim(int character) {
 		return switch (character) {
 			case '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=' -> true;
@@ -123,15 +143,8 @@ class Parser {
 		};
 	}
 
-	private static boolean genDelim(int character) {
-		return switch (character) {
-			case ':', '/', '?', '#', '[', ']', '@' -> true;
-			default -> false;
-		};
-	}
-
 	private static boolean us(int character) {
-		return unreserved(character) || subDelim(character);
+		return part(character) || character == '_' || character == '~' || subDelim(character);
 	}
 
 	private IllegalArgumentException illegalCharacter() {
@@ -176,7 +189,10 @@ class Parser {
 	}
 
 	private Path path(boolean absolute) {
-		var segments = new ArrayList<String>();
+		return this.path(absolute, new ArrayList<>());
+	}
+
+	private Path path(boolean absolute, List<String> segments) {
 		var index = this.index + 1;
 		var finished = false;
 
@@ -314,7 +330,7 @@ class Parser {
 				break;
 			}
 
-			if (this.advance() && !this.in(":/#?")) {
+			if (this.advance() && !this.in(":/?#")) {
 				if (octet == -1) {
 					break;
 				}
@@ -356,7 +372,7 @@ class Parser {
 						colon = this.index;
 					}
 				} else if (!this.ups()) {
-					if (!this.in("/#?")) throw this.illegalCharacter();
+					if (!this.in("/?#")) throw this.illegalCharacter();
 
 					break;
 				}
@@ -369,7 +385,7 @@ class Parser {
 					break A;
 				}
 
-				while (!this.in(":/#?") && this.advance()) {}
+				while (!this.in(":/?#") && this.advance()) {}
 
 				host = new RegisteredName(this.uri.substring(index, this.index));
 			}
@@ -379,7 +395,7 @@ class Parser {
 			index = this.index + 1;
 
 			while (this.advance()) {
-				if (this.in("/#?")) break;
+				if (this.in("/?#")) break;
 				if (!numeric(this.character)) throw new IllegalArgumentException("non-digit '%c' in port at index %s".formatted(this.character, this.index));
 			}
 

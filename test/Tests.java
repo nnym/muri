@@ -1,4 +1,5 @@
 import muri.IPvFutureAddress;
+import muri.Uri;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.annotation.Testable;
 
@@ -8,14 +9,21 @@ import static muri.Uri.*;
 @Testable
 public class Tests {
 	@Test void test() {
-		assertThrows(IllegalArgumentException.class, () -> uri(""));
 		assertThrows(IllegalArgumentException.class, () -> uri(":"));
 		assertThrows(IllegalArgumentException.class, () -> uri("1:"));
 		assertThrows(IllegalArgumentException.class, () -> uri("+:"));
 		assertThrows(IllegalArgumentException.class, () -> uri("-:"));
 		assertThrows(IllegalArgumentException.class, () -> uri(".:"));
 
-		var uri = uri("e:");
+		var uri = uri("");
+		assertNull(uri.scheme);
+		assertNull(uri.authority);
+		assertEquals("", uri.path.toString());
+		assertTrue(uri.path.isEmpty());
+		assertNull(uri.query);
+		assertNull(uri.fragment);
+
+		uri = uri("e:");
 		assertEquals("e", uri.scheme);
 		assertEquals("", uri.path.toString());
 		assertNull(uri.authority);
@@ -170,6 +178,38 @@ public class Tests {
 		assertEquals("1998/12/12.md", uri.path.toString());
 		assertEquals("1", uri.query.value("a"));
 		assertEquals(":@frag?/!$&'()*+,;=_~-.123", uri.fragment);
+
+		uri = uri("//datatracker.ietf.org/doc/html/rfc3986#section-4.2");
+		assertNull(uri.scheme);
+		assertEquals("datatracker.ietf.org", uri.authority.toString());
+		assertEquals("/doc/html/rfc3986", uri.path.toString());
+		assertNull(uri.query);
+		assertEquals("section-4.2", uri.fragment);
+
+		uri = uri("//datatracker.ietf.org#section-4.2");
+		assertNull(uri.scheme);
+		assertEquals("datatracker.ietf.org", uri.authority.toString());
+		assertEquals("", uri.path.toString());
+		assertEquals("section-4.2", uri.fragment);
+
+		uri = uri("//datatracker.ietf.org");
+		assertNull(uri.scheme);
+		assertEquals("datatracker.ietf.org", uri.authority.toString());
+		assertEquals("", uri.path.toString());
+		assertNull(uri.fragment);
+
+		uri = uri("/doc/html/rfc3986#section-4.2");
+		assertNull(uri.scheme);
+		assertNull(uri.authority);
+		assertEquals("/doc/html/rfc3986", uri.path.toString());
+		assertNull(uri.query);
+		assertEquals("section-4.2", uri.fragment);
+
+		uri = uri("doc/html/rfc3986#section-4.2");
+		assertNull(uri.scheme);
+		assertNull(uri.authority);
+		assertEquals("doc/html/rfc3986", uri.path.toString());
+		assertEquals("section-4.2", uri.fragment);
 
 		var bp = true;
 	}

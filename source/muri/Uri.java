@@ -19,6 +19,11 @@ public class Uri {
 		return new Parser(uri).parse();
 	}
 
+	public Uri absolute() {
+		if (this.scheme == null) throw new UnsupportedOperationException("this URI is a relative reference");
+		return new Uri(this.scheme, this.authority, this.path, this.query, null);
+	}
+
 	public boolean isAbsolute() {
 		return this.scheme != null && this.fragment == null;
 	}
