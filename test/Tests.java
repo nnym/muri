@@ -149,6 +149,11 @@ public class Tests {
 		assertEquals("", uri.authority.toString());
 		assertEquals("frag", uri.fragment);
 
+		uri = uri("test://example.net#frag");
+		assertEquals("example.net", uri.authority.toString());
+		assertEquals("", uri.path.toString());
+		assertEquals("frag", uri.fragment);
+
 		uri = uri("test://a:b@example.net?a=1#frag");
 		assertEquals("a:b@example.net", uri.authority.toString());
 		assertEquals("", uri.path.toString());
