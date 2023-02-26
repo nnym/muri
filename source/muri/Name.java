@@ -1,9 +1,9 @@
 package muri;
 
-public final class RegisteredName implements Host {
+public final class Name implements Host {
 	public final String name;
 
-	RegisteredName(String name) {
+	Name(String name) {
 		this.name = name;
 	}
 

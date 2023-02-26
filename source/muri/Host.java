@@ -1,5 +1,5 @@
 package muri;
 
-public sealed interface Host permits IPAddress, RegisteredName {
+public sealed interface Host permits IPAddress, Name {
 	@Override String toString();
 }

@@ -388,7 +388,7 @@ class Parser {
 
 				while (!this.in(":/?#") && this.advance()) {}
 
-				host = new RegisteredName(this.uri.substring(index, this.index));
+				host = new Name(this.uri.substring(index, this.index));
 			}
 		}
 
