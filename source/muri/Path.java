@@ -29,7 +29,9 @@ public class Path {
 	Path removeDotSegments() {
 		var segments = new ArrayList<String>();
 
-		for (var segment : this.segments) {
+		for (var iterator = this.segments.iterator(); iterator.hasNext();) {
+			var segment = iterator.next();
+
 			if (!segment.equals(".")) {
 				if (segment.equals("..")) {
 					if (!segments.isEmpty()) {
@@ -37,7 +39,12 @@ public class Path {
 					}
 				} else {
 					segments.add(segment);
+					continue;
 				}
+			}
+
+			if (!iterator.hasNext()) {
+				segments.add("");
 			}
 		}
 

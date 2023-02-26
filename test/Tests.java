@@ -18,37 +18,37 @@ public class Tests {
 		var uri = base.resolve("/test/./te/..#garf");
 		assertSame(base.scheme, uri.scheme);
 		assertSame(base.authority, uri.authority);
-		assertStringEquals("/test", uri.path);
+		assertStringEquals("/test/", uri.path);
 		assertSame(base.query, uri.query);
 		assertStringEquals("garf", uri.fragment);
-		assertStringEquals("https://example.net/test?a=1#garf", uri);
+		assertStringEquals("https://example.net/test/?a=1#garf", uri);
 
 		base = uri("https://example.net/a/b/c?a=1#frag");
 		uri = base.resolve("/test/./te/..#garf");
 		assertSame(base.scheme, uri.scheme);
 		assertSame(base.authority, uri.authority);
-		assertStringEquals("/test", uri.path);
+		assertStringEquals("/test/", uri.path);
 		assertSame(base.query, uri.query);
 		assertStringEquals("garf", uri.fragment);
-		assertStringEquals("https://example.net/test?a=1#garf", uri);
+		assertStringEquals("https://example.net/test/?a=1#garf", uri);
 
 		base = uri("https://example.net/a/b/c/?a=1#frag");
 		uri = base.resolve("test/./te/..#garf");
 		assertSame(base.scheme, uri.scheme);
 		assertSame(base.authority, uri.authority);
-		assertStringEquals("/a/b/c/test", uri.path);
+		assertStringEquals("/a/b/c/test/", uri.path);
 		assertSame(base.query, uri.query);
 		assertStringEquals("garf", uri.fragment);
-		assertStringEquals("https://example.net/a/b/c/test?a=1#garf", uri);
+		assertStringEquals("https://example.net/a/b/c/test/?a=1#garf", uri);
 
 		base = uri("https://example.net/a/b/c?a=1#frag");
 		uri = base.resolve("test/./te/..#garf");
 		assertSame(base.scheme, uri.scheme);
 		assertSame(base.authority, uri.authority);
-		assertStringEquals("/a/b/test", uri.path);
+		assertStringEquals("/a/b/test/", uri.path);
 		assertSame(base.query, uri.query);
 		assertStringEquals("garf", uri.fragment);
-		assertStringEquals("https://example.net/a/b/test?a=1#garf", uri);
+		assertStringEquals("https://example.net/a/b/test/?a=1#garf", uri);
 
 		base = uri("https://example.net/a/b/c?a=1#frag");
 		uri = base.resolve("#garf");
