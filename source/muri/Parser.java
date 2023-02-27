@@ -363,8 +363,12 @@ class Parser {
 					}
 
 					userinfo = new UserInfo(this.uri.substring(index, colon == 0 ? this.index : colon), colon == 0 ? null : this.uri.substring(colon + 1, this.index));
-					index = this.index + 1;
 
+					if (this.advance() && null != (host = this.ipLiteral())) {
+						break A;
+					}
+
+					index = this.index;
 					break;
 				}
 
@@ -381,15 +385,13 @@ class Parser {
 
 			this.index = index - 1;
 
-			if (this.advance() && null == (host = this.ipLiteral())) {
-				if (null != (host = this.ip4())) {
-					break A;
-				}
-
-				while (!this.in(":/?#") && this.advance()) {}
-
-				host = new Name(this.uri.substring(index, this.index));
+			if (this.advance() && null != (host = this.ip4())) {
+				break A;
 			}
+
+			while (!this.in(":/?#") && this.advance()) {}
+
+			host = new Name(this.uri.substring(index, this.index));
 		}
 
 		if (this.character == ':') {
