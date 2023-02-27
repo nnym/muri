@@ -7,7 +7,10 @@ import java.util.StringJoiner;
 public class Query {
 	public final List<Parameter> parameters;
 
-	Query(List<Parameter> parameters) {
+	private final String source;
+
+	Query(String source, List<Parameter> parameters) {
+		this.source = source;
 		this.parameters = parameters;
 	}
 
@@ -33,14 +36,18 @@ public class Query {
 	}
 
 	@Override public int hashCode() {
-		return this.parameters.hashCode();
+		return this.source == null ? this.parameters.hashCode() : this.source.hashCode();
 	}
 
 	@Override public boolean equals(Object o) {
-		return o instanceof Query that && this.parameters.equals(that.parameters);
+		return o instanceof Query that && (this.source == null ? this.parameters.equals(that.parameters) : this.source.equals(that.toString()));
 	}
 
 	@Override public String toString() {
+		if (this.source != null) {
+			return this.source;
+		}
+
 		var joiner = new StringJoiner("&");
 
 		for (var parameter : this.parameters) {

@@ -1,16 +1,20 @@
 package muri;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 class Parser {
 	private final String uri;
+	private final boolean normalize;
 	private int index = -1;
+	private int start = -1;
 	private int character;
+	private int value = -1;
 
-	Parser(String uri) {
+	Parser(String uri, boolean normalize) {
 		this.uri = uri;
+		this.normalize = normalize;
 	}
 
 	Uri parse() {
@@ -31,10 +35,12 @@ class Parser {
 					if (!alpha) throw new IllegalArgumentException("0th character ('%c') is not A-z".formatted(character));
 
 					scheme = this.uri.substring(0, this.index);
+					if (this.normalize) scheme = scheme.toLowerCase(Locale.ROOT);
+
 					break A;
 				};
 
-				if (!schemePart(this.character)) break;
+				if (!part(this.character) && this.character != '+') break;
 			}
 
 			for (;;) {
@@ -66,7 +72,7 @@ class Parser {
 					}
 
 					if (this.advance('/')) {
-						if (this.advance()) {
+						if (this.advanceEncoded()) {
 							authority = this.authority();
 
 							if (this.finished() || this.character != '/') {
@@ -108,10 +114,6 @@ class Parser {
 
 	private boolean qfchar() {
 		return this.pchar() || this.character == '/' || this.character == '?';
-	}
-
-	private static boolean schemePart(int character) {
-		return part(character) || character == '+';
 	}
 
 	private static boolean part(int character) {
@@ -164,13 +166,13 @@ class Parser {
 
 	private Query query() {
 		var parameters = new ArrayList<Parameter>();
-		var index = this.index + 1;
+		int index = this.index + 1, start = index;
 		var finished = false;
 		String name = null, value;
 
 		while (!finished) {
-			if ((finished = !this.advance() || !this.qfchar()) || this.character == '&') {
-				value = this.uri.substring(index, this.index);
+			if ((finished = !this.advanceEncoded() || !this.qfchar()) || this.value == '&') {
+				value = this.uri.substring(index, this.start);
 
 				if (name == null) {
 					name = value;
@@ -180,13 +182,13 @@ class Parser {
 				parameters.add(new Parameter(name, value));
 				name = null;
 				index = this.index + 1;
-			} else if (this.character == '=' && name == null) {
-				name = this.uri.substring(index, this.index);
+			} else if (this.value == '=' && name == null) {
+				name = this.uri.substring(index, this.start);
 				index = this.index + 1;
 			}
 		}
 
-		return new Query(List.copyOf(parameters));
+		return new Query(this.normalize ? null : this.uri.substring(start, this.index), List.copyOf(parameters));
 	}
 
 	private Path path(boolean absolute) {
@@ -221,6 +223,8 @@ class Parser {
 	}
 
 	private IPvFutureAddress ipFuture() {
+		var start = this.index;
+
 		if (!this.advance()) throw new IllegalArgumentException("expected IP address future version");
 
 		var index = this.index;
@@ -244,11 +248,11 @@ class Parser {
 			if (!this.advance()) throw new IllegalArgumentException("missing ']' for host IP address");
 		}
 
-		return new IPvFutureAddress(version, this.uri.substring(index, this.index));
+		return new IPvFutureAddress(this.normalize ? null : this.uri.substring(start, this.index), version, this.uri.substring(index, this.index));
 	}
 
 	private IPv6Address ip6() {
-		var index = this.index;
+		int index = this.index, start = index;
 		var address = new int[]{-1, -1, -1, -1, -1, -1, -1, -1};
 		var elision = 8;
 		var octet = 0;
@@ -289,7 +293,7 @@ class Parser {
 		for (index = 0; index < elision; ++index) compact[index] = (short) address[index];
 		for (index = octet - (address[octet] == -1 ? 1 : 0), octet = 7; index > elision; --index, --octet) compact[octet] = (short) address[index];
 
-		return new IPv6Address(compact);
+		return new IPv6Address(this.normalize ? null : this.uri.substring(start, this.index), compact);
 	}
 
 	private IPv4Address ip4() {
@@ -335,14 +339,16 @@ class Parser {
 
 		if (null == (host = this.ipLiteral())) A: {
 			var colon = 0;
+			var colonEnd = 0;
 
 			do {
 				if (this.character == '@') {
-					if (colon == 0) {
-						colon = this.index;
-					}
-
-					userinfo = new UserInfo(this.uri.substring(index, colon == 0 ? this.index : colon), colon == 0 ? null : this.uri.substring(colon + 1, this.index));
+					var source = this.normalize && colon != 0 ? null : this.uri.substring(index, this.index);
+					userinfo = new UserInfo(
+						this.normalize ? null : source,
+						colon == 0 ? source : this.uri.substring(index, colon),
+						colon == 0 ? null : this.uri.substring(colonEnd + 1, this.index)
+					);
 
 					if (this.advance() && null != (host = this.ipLiteral())) {
 						break A;
@@ -352,16 +358,17 @@ class Parser {
 					break;
 				}
 
-				if (this.character == ':') {
+				if (this.value == ':') {
 					if (colon == 0) {
-						colon = this.index;
+						colon = this.start;
+						colonEnd = this.index;
 					}
 				} else if (!this.ups()) {
 					if (!this.in("/?#")) throw this.illegalCharacter();
 
 					break;
 				}
-			} while (this.advance());
+			} while (this.advanceEncoded());
 
 			this.index = index - 1;
 
@@ -371,7 +378,8 @@ class Parser {
 
 			while (!this.in(":/?#") && this.advance()) {}
 
-			host = new Name(this.uri.substring(index, this.index));
+			var name = this.uri.substring(index, this.index);
+			host = new Name(this.normalize ? name.toLowerCase(Locale.ROOT) : name);
 		}
 
 		if (this.character == ':') {
@@ -400,18 +408,25 @@ class Parser {
 			return true;
 		}
 
+		this.start = this.index;
 		return false;
 	}
 
 	private boolean skipEscape() {
+		this.start = this.index;
+
 		if (this.character == '%') {
-			for (var e = 0; e < 2; ++e) {
+			this.value = 0;
+
+			for (var x = 0; x < 2; ++x) {
 				if (!this.advance() || !hex(this.character)) throw new IllegalArgumentException("hexadecimal character expected in escape at index " + this.index);
+				this.value = this.value * 16 + Character.digit(this.character, 16);
 			}
 
 			return true;
 		}
 
+		this.value = this.character;
 		return false;
 	}
 

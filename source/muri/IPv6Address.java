@@ -5,19 +5,26 @@ import java.util.Arrays;
 public final class IPv6Address implements IPAddress {
 	public final short[] address;
 
-	IPv6Address(short[] address) {
+	private final String source;
+
+	IPv6Address(String source, short[] address) {
+		this.source = source;
 		this.address = address;
 	}
 
 	@Override public int hashCode() {
-		return Arrays.hashCode(this.address);
+		return this.source == null ? Arrays.hashCode(this.address) : this.source.hashCode();
 	}
 
 	@Override public boolean equals(Object o) {
-		return o instanceof IPv6Address that && Arrays.equals(this.address, that.address);
+		return o instanceof IPv6Address that && (this.source == null ? Arrays.equals(this.address, that.address) : this.source.equals(that.toString()));
 	}
 
 	@Override public String toString() {
+		if (this.source != null) {
+			return this.source;
+		}
+
 		var builder = new StringBuilder();
 		var zeroCount = 0;
 		var elisionCount = 1;

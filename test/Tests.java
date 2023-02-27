@@ -114,9 +114,9 @@ public class Tests {
 		assertTrue(uri.path.isEmpty());
 
 		assertEquals("test", uri("test:").scheme);
-		assertEquals("TEST", uri("TEST:").scheme);
-		assertEquals("TeST1+-.", uri("TeST1+-.:").scheme);
-		assertEquals("TeST1.2+-3", uri("TeST1.2+-3:").scheme);
+		assertEquals("test", uri("TEST:").scheme);
+		assertEquals("test1+-.", uri("TeST1+-.:").scheme);
+		assertEquals("test1.2+-3", uri("TeST1.2+-3:").scheme);
 
 		uri = uri("test://googol");
 		assertEquals("test", uri.scheme);

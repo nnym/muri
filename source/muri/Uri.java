@@ -23,14 +23,26 @@ public class Uri {
 	}
 
 	public static Uri uri(String uri) {
-		return new Parser(uri).parse();
+		return uri(uri, true);
 	}
 
 	public static Uri uri(URI uri) {
-		return uri(uri.toString());
+		return uri(uri, true);
 	}
 
 	public static Uri uri(URL url) {
+		return uri(url, true);
+	}
+
+	public static Uri uri(String uri, boolean normalize) {
+		return new Parser(uri, normalize).parse();
+	}
+
+	public static Uri uri(URI uri, boolean normalize) {
+		return uri(uri.toString());
+	}
+
+	public static Uri uri(URL url, boolean normalize) {
 		return uri(url.toString());
 	}
 
