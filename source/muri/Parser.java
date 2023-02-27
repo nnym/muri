@@ -321,20 +321,12 @@ class Parser {
 				} else if (255 < (ipAddress[octet] = ipAddress[octet] * 10 + value)) {
 					break;
 				}
-
-				if (octet == 3) {
-					octet = -1;
-				}
 			} else {
 				break;
 			}
 
-			if (this.advance() && !this.in(":/?#")) {
-				if (octet == -1) {
-					break;
-				}
-			} else {
-				if (octet == -1) {
+			if (!this.advance() || this.in(":/?#")) {
+				if (octet == 3 && ipAddress[octet] != -1) {
 					return new IPv4Address(ipAddress[3] | ipAddress[2] << 8 | ipAddress[1] << 16 | ipAddress[0] << 24);
 				}
 
