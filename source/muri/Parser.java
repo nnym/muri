@@ -293,22 +293,22 @@ class Parser {
 	}
 
 	private IPv4Address ip4() {
-		var ipAddress = new int[]{-1, -1, -1, -1};
+		var address = new int[]{-1, -1, -1, -1};
 		var octet = 0;
 
 		for (;;) {
 			if (this.character == '.') {
 				++octet;
 			} else if (numeric(this.character)) {
-				if (ipAddress[octet] == 0) {
+				if (address[octet] == 0) {
 					break;
 				}
 
 				var value = this.character - '0';
 
-				if (ipAddress[octet] == -1) {
-					ipAddress[octet] = value;
-				} else if (255 < (ipAddress[octet] = ipAddress[octet] * 10 + value)) {
+				if (address[octet] == -1) {
+					address[octet] = value;
+				} else if (255 < (address[octet] = address[octet] * 10 + value)) {
 					break;
 				}
 			} else {
@@ -316,8 +316,8 @@ class Parser {
 			}
 
 			if (!this.advance() || this.in(":/?#")) {
-				if (octet == 3 && ipAddress[octet] != -1) {
-					return new IPv4Address(ipAddress[3] | ipAddress[2] << 8 | ipAddress[1] << 16 | ipAddress[0] << 24);
+				if (octet == 3 && address[octet] != -1) {
+					return new IPv4Address(address[3] | address[2] << 8 | address[1] << 16 | address[0] << 24);
 				}
 
 				break;
