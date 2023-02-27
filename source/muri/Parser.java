@@ -161,7 +161,7 @@ class Parser {
 			if (!this.qfchar()) throw this.illegalCharacter();
 		}
 
-		return this.index == index ? "" : this.uri.substring(index, this.index);
+		return this.index == index ? "" : this.decodeSubstring(index, this.index);
 	}
 
 	private Query query() {
@@ -172,7 +172,7 @@ class Parser {
 
 		while (!finished) {
 			if ((finished = !this.advanceEncoded() || !this.qfchar()) || this.value == '&') {
-				value = this.uri.substring(index, this.start);
+				value = this.decodeSubstring(index, this.start);
 
 				if (name == null) {
 					name = value;
@@ -183,7 +183,7 @@ class Parser {
 				name = null;
 				index = this.index + 1;
 			} else if (this.value == '=' && name == null) {
-				name = this.uri.substring(index, this.start);
+				name = this.decodeSubstring(index, this.start);
 				index = this.index + 1;
 			}
 		}
@@ -201,7 +201,7 @@ class Parser {
 
 		while (!finished) {
 			if ((finished = !this.advance()) || this.character == '/' || (finished |= !this.pchar())) {
-				segments.add(this.index == index ? "" : this.uri.substring(index, this.index));
+				segments.add(this.index == index ? "" : this.decodeSubstring(index, this.index));
 				index = this.index + 1;
 			}
 		}
@@ -332,7 +332,7 @@ class Parser {
 	}
 
 	private Authority authority() {
-		var index = this.index;
+		var index = this.start;
 		UserInfo userinfo = null;
 		Host host;
 		var port = -1;
@@ -346,8 +346,8 @@ class Parser {
 					var source = this.normalize && colon != 0 ? null : this.uri.substring(index, this.index);
 					userinfo = new UserInfo(
 						this.normalize ? null : source,
-						colon == 0 ? source : this.uri.substring(index, colon),
-						colon == 0 ? null : this.uri.substring(colonEnd + 1, this.index)
+						colon == 0 ? source : this.decodeSubstring(index, colon),
+						colon == 0 ? null : this.decodeSubstring(colonEnd + 1, this.index)
 					);
 
 					if (this.advance() && null != (host = this.ipLiteral())) {
@@ -378,8 +378,7 @@ class Parser {
 
 			while (!this.in(":/?#") && this.advance()) {}
 
-			var name = this.uri.substring(index, this.index);
-			host = new Name(this.normalize ? name.toLowerCase(Locale.ROOT) : name);
+			host = new Name(this.normalize ? null : this.uri.substring(index, this.index), this.decodeSubstring(index, this.index).toLowerCase(Locale.ROOT));
 		}
 
 		if (this.character == ':') {
@@ -428,6 +427,10 @@ class Parser {
 
 		this.value = this.character;
 		return false;
+	}
+
+	private String decodeSubstring(int start, int end) {
+		return Uri.decode(this.uri, start, end);
 	}
 
 	private boolean in(String characters) {

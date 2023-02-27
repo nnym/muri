@@ -3,6 +3,7 @@ package muri;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -104,6 +105,29 @@ public class Uri {
 		if (this.fragment != null) builder.append('#').append(this.fragment);
 
 		return builder.toString();
+	}
+
+	static String decode(String string, int start, int end) {
+		var buffer = CharBuffer.allocate(end - start);
+
+		for (; start < end; ++start) {
+			var character = string.charAt(start);
+
+			if (character == '%') {
+				var value = 0;
+
+				for (var x = 0; x < 2; ++x) {
+					character = string.charAt(++start);
+					value = value * 16 + Character.digit(character, 16);
+				}
+
+				buffer.put((char) value);
+			} else {
+				buffer.put(character);
+			}
+		}
+
+		return String.valueOf(buffer.array(), 0, buffer.limit());
 	}
 
 	private Path mergePath(Path path) {
