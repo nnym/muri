@@ -250,19 +250,19 @@ class Parser {
 	private IPv6Address ip6() {
 		var index = this.index;
 		var address = new int[]{-1, -1, -1, -1, -1, -1, -1, -1};
-		var elision = -1;
+		var elision = 8;
 		var octet = 0;
 
 		for (;;) {
 			if (this.character == ']') {
-				if (elision == -1 && (octet < 7 || address[octet] == -1)) throw new IllegalArgumentException("incomplete IPv6 address");
+				if (elision == 8 && (octet < 7 || address[octet] == -1)) throw new IllegalArgumentException("incomplete IPv6 address");
 
 				break;
 			}
 
 			if (this.character == ':') {
 				if (this.peek(':')) {
-					if (elision != -1) throw new IllegalArgumentException("illegal second elision at index %s".formatted(this.index));
+					if (elision != 8) throw new IllegalArgumentException("illegal second elision at index %s".formatted(this.index));
 
 					this.advance();
 					elision = octet += address[octet] == -1 ? 0 : 1;
@@ -276,9 +276,7 @@ class Parser {
 			} else if (hex(this.character)) {
 				if (this.index - index >= 4) throw new IllegalArgumentException("field at index %s exceeds 4 octets".formatted(index));
 
-				var value = address[octet];
-				var digit = Character.digit(this.character, 16);
-				address[octet] = value == -1 ? digit : (short) (value * 16 + digit);
+				address[octet] = (short) (Math.max(0, address[octet]) * 16 + Character.digit(this.character, 16));
 			} else {
 				throw new IllegalArgumentException("invalid character '%c' in IPv6 address at index %s".formatted(this.character, this.index));
 			}
@@ -286,18 +284,10 @@ class Parser {
 			if (!this.advance()) throw new IllegalArgumentException("unterminated IPv6 address");
 		}
 
-		if (elision != -1) {
-			var length = octet - elision - (address[octet] == -1 ? 1 : 0);
-			var start = address.length - length;
-			System.arraycopy(address, elision + 1, address, start, length);
-			Arrays.fill(address, elision, start, 0);
-		}
-
 		var compact = new short[8];
 
-		for (index = 0; index < 8; ++index) {
-			compact[index] = (short) address[index];
-		}
+		for (index = 0; index < elision; ++index) compact[index] = (short) address[index];
+		for (index = octet - (address[octet] == -1 ? 1 : 0), octet = 7; index > elision; --index, --octet) compact[octet] = (short) address[index];
 
 		return new IPv6Address(compact);
 	}
