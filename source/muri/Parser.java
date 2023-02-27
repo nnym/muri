@@ -421,12 +421,12 @@ class Parser {
 
 	private boolean peek(int character) {
 		var index = this.index + 1;
-		return index < this.uri.length() && character == this.uri.codePointAt(index);
+		return index < this.uri.length() && character == this.uri.charAt(index);
 	}
 
 	private boolean peek(String characters) {
 		var index = this.index + 1;
-		return index < this.uri.length() && characters.indexOf(this.uri.codePointAt(index)) >= 0;
+		return index < this.uri.length() && characters.indexOf(this.uri.charAt(index)) >= 0;
 	}
 
 	private boolean hasNext() {
@@ -454,7 +454,7 @@ class Parser {
 			return false;
 		}
 
-		this.character = this.uri.codePointAt(this.index);
+		this.character = this.uri.charAt(this.index);
 		return true;
 	}
 }
