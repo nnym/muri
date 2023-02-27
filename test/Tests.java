@@ -294,6 +294,11 @@ public class Tests {
 		assertEquals("doc/html/rfc3986", uri.path.toString());
 		assertEquals("section-4.2", uri.fragment);
 
+		assertStringEquals("::1", uri("//[::1]").authority.host);
+		assertStringEquals("1::1", uri("//[1::1]").authority.host);
+		assertStringEquals("1::", uri("//[1::]").authority.host);
+		assertStringEquals("::", uri("//[::]").authority.host);
+
 		var bp = true;
 	}
 }

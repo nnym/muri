@@ -255,7 +255,7 @@ class Parser {
 
 		for (;;) {
 			if (this.character == ']') {
-				if (elision == -1 && octet < 7 && address[octet] == -1) throw new IllegalArgumentException("incomplete IPv6 address");
+				if (elision == -1 && (octet < 7 || address[octet] == -1)) throw new IllegalArgumentException("incomplete IPv6 address");
 
 				break;
 			}
@@ -265,7 +265,7 @@ class Parser {
 					if (elision != -1) throw new IllegalArgumentException("illegal second elision at index %s".formatted(this.index));
 
 					this.advance();
-					elision = octet;
+					elision = octet += address[octet] == -1 ? 0 : 1;
 				} else {
 					if (this.index == index) throw new IllegalArgumentException("illegal colon at index %s".formatted(this.index));
 				}
@@ -275,7 +275,6 @@ class Parser {
 				index = this.index + 1;
 			} else if (hex(this.character)) {
 				if (this.index - index >= 4) throw new IllegalArgumentException("field at index %s exceeds 4 octets".formatted(index));
-				if (elision != -1 && octet == 7) throw new IllegalArgumentException("too many fields");
 
 				var value = address[octet];
 				var digit = Character.digit(this.character, 16);
@@ -288,11 +287,10 @@ class Parser {
 		}
 
 		if (elision != -1) {
-			var firstZero = elision + (address[elision] == -1 ? 0 : 1);
-			var length = address[firstZero] == -1 ? 0 : octet - elision;
+			var length = octet - elision - (address[octet] == -1 ? 1 : 0);
 			var start = address.length - length;
 			System.arraycopy(address, elision + 1, address, start, length);
-			Arrays.fill(address, firstZero, start, 0);
+			Arrays.fill(address, elision, start, 0);
 		}
 
 		var compact = new short[8];
