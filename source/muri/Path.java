@@ -19,6 +19,10 @@ public class Path {
 		return !this.absolute && this.segments.isEmpty();
 	}
 
+	public String filename() {
+		return this.segments.isEmpty() ? "" : this.segments.get(this.segments.size() - 1);
+	}
+
 	@Override public int hashCode() {
 		return Objects.hash(this.absolute, this.segments);
 	}
