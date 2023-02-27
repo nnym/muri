@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Uri {
 	public final String scheme;
@@ -64,6 +65,19 @@ public class Uri {
 		} catch (MalformedURLException exception) {
 			throw new IllegalArgumentException(exception.getMessage(), exception);
 		}
+	}
+
+	@Override public int hashCode() {
+		return Objects.hash(this.scheme, this.authority, this.path, this.query, this.fragment);
+	}
+
+	@Override public boolean equals(Object o) {
+		return o instanceof Uri that
+			&& Objects.equals(this.scheme, that.scheme)
+			&& Objects.equals(this.authority, that.authority)
+			&& this.path.equals(that.path)
+			&& Objects.equals(this.query, that.query)
+			&& Objects.equals(this.fragment, that.fragment);
 	}
 
 	@Override public String toString() {

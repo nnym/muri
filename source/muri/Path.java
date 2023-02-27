@@ -2,6 +2,7 @@ package muri;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Path {
 	static final Path empty = new Path(false, List.of());
@@ -16,6 +17,14 @@ public class Path {
 
 	public boolean isEmpty() {
 		return !this.absolute && this.segments.isEmpty();
+	}
+
+	@Override public int hashCode() {
+		return Objects.hash(this.absolute, this.segments);
+	}
+
+	@Override public boolean equals(Object o) {
+		return o instanceof Path that && this.absolute == that.absolute && this.segments.equals(that.segments);
 	}
 
 	@Override public String toString() {

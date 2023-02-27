@@ -32,6 +32,14 @@ public class Query {
 		return null;
 	}
 
+	@Override public int hashCode() {
+		return this.parameters.hashCode();
+	}
+
+	@Override public boolean equals(Object o) {
+		return o instanceof Query that && this.parameters.equals(that.parameters);
+	}
+
 	@Override public String toString() {
 		var joiner = new StringJoiner("&");
 

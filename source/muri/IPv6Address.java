@@ -1,10 +1,20 @@
 package muri;
 
+import java.util.Arrays;
+
 public final class IPv6Address implements IPAddress {
 	public final short[] address;
 
 	IPv6Address(short[] address) {
 		this.address = address;
+	}
+
+	@Override public int hashCode() {
+		return Arrays.hashCode(this.address);
+	}
+
+	@Override public boolean equals(Object o) {
+		return o instanceof IPv6Address that && Arrays.equals(this.address, that.address);
 	}
 
 	@Override public String toString() {
